@@ -1,0 +1,24 @@
+#!/bin/bash
+
+export $(dbus-launch)
+
+export XKL_XMODMAP_DISABLE=1
+
+unset SESSION_MANAGER
+
+gnome-panel &
+
+gnome-settings-daemon &
+
+metacity &
+
+nautilus &
+
+gnome-terminal &
+
+xsetroot -solid grey
+
+vncconfig -iconic &
+
+gnome-session &
+
