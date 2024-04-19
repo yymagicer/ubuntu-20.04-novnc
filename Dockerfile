@@ -17,8 +17,9 @@ RUN apt-get install -y tigervnc-standalone-server \
         wget \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y tigervnc-common  xvfb gnome-panel gnome-settings-daemon metacity nautilus gnome-terminal expect vim  && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y tigervnc-common  xvfb gnome-panel gnome-settings-daemon metacity nautilus gnome-terminal expect vim
 
+RUN apt-get install -y  language-pack-zh-hans language-pack-gnome-zh-hans language-pack-zh-hans-base language-pack-gnome-zh-hans-base 
 # 设置 supervisord
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -31,6 +32,12 @@ RUN chmod +x /usr/share/novnc/utils/*.sh
 
 USER root
 ENV LANG=C.UTF-8
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh
+ENV LC_ALL=zh_CN.UTF-8
+
+# 设置系统的默认语言为中文
+RUN update-locale LANG=zh_CN.UTF-8 LANGUAGE=zh_CN:zh LC_ALL=zh_CN.UTF-8
 
 # 设置密码
 RUN mkdir -p /root/.vnc 
@@ -45,6 +52,7 @@ COPY xstartup  /root/.vnc/xstartup
 
 RUN chmod 777  /root/.vnc/xstartup
 
+RUN rm -rf /var/lib/apt/lists/*
 # 设置启动命令
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
