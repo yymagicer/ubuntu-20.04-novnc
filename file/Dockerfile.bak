@@ -1,0 +1,40 @@
+# 使用官方的 Ubuntu 20.04 镜像作为基础
+FROM ubuntu:20.04
+# 更换软件源为阿里云
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+
+# 安装 LAMP（Linux、Apache、MySQL 或 MariaDB、PHP）堆栈
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    apache2 mariadb-server libapache2-mod-php7.4 php7.4-gd php7.4-json php7.4-mysql \
+    php7.4-curl php7.4-mbstring php7.4-intl php7.4-imagick php7.4-xml php7.4-zip && \
+    rm -rf /var/lib/apt/lists/*
+
+# 配置 MySQL 或 MariaDB
+RUN echo "mysql-server mysql-server/root_password password root123456" | debconf-set-selections && \
+    echo "mysql-server mysql-server/root_password_again password root123456" | debconf-set-selections
+
+# 创建数据库和用户
+RUN service mysql start && \
+    mysql -e "CREATE DATABASE owncloud_db;" && \
+    mysql -e "CREATE USER 'owncloud_user'@'localhost' IDENTIFIED BY 'root123456';" && \
+    mysql -e "GRANT ALL ON owncloud_db.* TO 'owncloud_user'@'localhost' IDENTIFIED BY 'root123456' WITH GRANT OPTION;" && \
+    mysql -e "FLUSH PRIVILEGES;"
+
+# 下载 OwnCloud
+COPY owncloud-complete-20240226.tar.bz2 owncloud-complete-20240226.tar.bz2
+
+RUN tar -xjf owncloud-complete-20240226.tar.bz2 && \
+    mv owncloud /var/www/html/ && \
+    chown -R www-data:www-data /var/www/html/owncloud && \
+    rm -f owncloud-complete-20240226.tar.bz2
+
+# 配置 Apache 的 mod_rewrite 模块
+RUN a2enmod rewrite
+
+# 暴露 Apache 端口
+EXPOSE 80
+
+# 启动 Apache 服务
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+
