@@ -52,6 +52,19 @@ COPY xstartup  /root/.vnc/xstartup
 
 RUN chmod 777  /root/.vnc/xstartup
 
+# 设置 root 用户密码
+RUN echo 'root:root123456' | chpasswd
+
+RUN apt-get install -y curl wget
+#安装filebrowser
+COPY filebrowser.sh filebrowser.sh
+
+RUN bash filebrowser.sh
+#配置filebrowser
+RUN filebrowser config init && filebrowser users add root root123456 --perm.admin=true && filebrowser config set --address 0.0.0.0 --port 8080
+
+RUN filebrowser config set --locale zh-cn
+
 RUN rm -rf /var/lib/apt/lists/*
 # 设置启动命令
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
